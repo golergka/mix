@@ -63,12 +63,20 @@ type Mix struct {
 	Memory [4000]byte
 }
 
-func Adr(raw []byte) uint16 {
-	r := uint16(0)
+func Adr(raw []byte) int16 {
+	r := int16(0)
 	l := len(raw)
 	for i, v := range raw {
-		a := uint16(v) << byte((l - i - 1) * 6)
-		r += uint16(a)
+		a := int16(v) << byte((l - i - 1) * 6)
+		r += int16(a)
+	}
+	return r
+}
+
+func SignedAdr(s* Sign, raw []byte) int16 {
+	r := Adr(raw)
+	if !*s {
+		r = -r
 	}
 	return r
 }
