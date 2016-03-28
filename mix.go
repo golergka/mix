@@ -81,6 +81,10 @@ func (w *Word) SignedAdr() int16 {
 	return SignedAdr(&w.Sign, w.Bytes[0:2])
 }
 
+func (i *Index) SignedAdr() int16 {
+	return SignedAdr(&i.Sign, i.Bytes[:])
+}
+
 type Op byte
 
 const (
@@ -101,12 +105,7 @@ func (w *Word) Opcode() Op {
 type Registers struct {
 	RA	Word
 	RX	Word
-	RI1	Index
-	RI2	Index
-	RI3	Index
-	RI4	Index
-	RI5	Index
-	RI6	Index
+	RI	[6]Index
 
 	O	bool
 	C	Comparison
@@ -114,5 +113,17 @@ type Registers struct {
 
 type Mix struct {
 	Registers
-	Memory [4000]byte
+	Memory [4000]Word
+}
+
+func (m *Mix) EffectiveAdr(i *Word) int16 {
+	return m.RI[i.Bytes[2] - 1].SignedAdr() + i.SignedAdr()
+}
+
+func (m *Mix) Do(i *Word) {
+	switch Op(i.Bytes[4]) {
+	case OP_LDA:
+		a := m.EffectiveAdr(i)
+		m.RA = m.Memory[a].Field(i.Bytes[3])
+	}
 }

@@ -56,3 +56,16 @@ func TestWordOpcode(t *testing.T) {
 	assert.Equal(t, OP_LDA, (&Word{Bytes:[5]byte{0, 0, 0, 0,  8}}).Opcode())
 	assert.Equal(t, OP_LDA, (&Word{Bytes:[5]byte{1, 2, 4, 16, 8}}).Opcode())
 }
+
+func TestDo(t *testing.T) {
+	{
+		var m Mix
+		m.RI[1] = Index{Sign:true,  Bytes:[2]byte{ 0, 63}}
+		m.Memory[31] = Word {Sign:false, Bytes:[5]byte{10, 11, 0, 11, 22}}
+		m.Do(&Word {Sign:false, Bytes:[5]byte{0, 32, 02, 11, 8}})
+
+		assert.Equal(t,
+			Word {Sign:true, Bytes:[5]byte{00, 00, 10, 11, 00}},
+			m.RA)
+	}
+}
