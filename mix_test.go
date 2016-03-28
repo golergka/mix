@@ -16,6 +16,12 @@ func TestWordString(t *testing.T) {
 	assert.Equal(t, "- 00 00 00 00 00", m.String())
 }
 
+func TestWordField(t * testing.T) {
+	assert.Equal( t, 
+		  Word{Sign:true,  Bytes:[5]byte{ 0,  0, 10, 11,  0}},
+		(&Word{Sign:false, Bytes:[5]byte{10, 11,  0, 11, 22}}).Field(11))
+}
+
 func TestAdr(t *testing.T) {
 	assert.Equal(t, int16(0), Adr([]byte{0}))
 	assert.Equal(t, int16(0), Adr([]byte{0, 0}))
@@ -36,4 +42,17 @@ func TestSignAdr(t *testing.T) {
 	var s Sign
 	s = false
 	assert.Equal(t, int16(-1), SignedAdr(&s, []byte{1}));
+	assert.Equal(t, int16(-5), SignedAdr(&s, []byte{0, 5}));
+}
+
+func TestWordSignAdr(t *testing.T) {
+	assert.Equal(t, int16( 0), (&Word{Sign:false, Bytes:[5]byte{0, 0, 1, 2, 3}}).SignedAdr())
+	assert.Equal(t, int16(-1), (&Word{Sign:false, Bytes:[5]byte{0, 1, 1, 2, 3}}).SignedAdr())
+	assert.Equal(t, int16(64), (&Word{Sign:true,  Bytes:[5]byte{1, 0, 1, 2, 3}}).SignedAdr())
+	assert.Equal(t, int16(-5), (&Word{Sign:false, Bytes:[5]byte{0, 5, 1, 2, 3}}).SignedAdr())
+}
+
+func TestWordOpcode(t *testing.T) {
+	assert.Equal(t, OP_LDA, (&Word{Bytes:[5]byte{0, 0, 0, 0,  8}}).Opcode())
+	assert.Equal(t, OP_LDA, (&Word{Bytes:[5]byte{1, 2, 4, 16, 8}}).Opcode())
 }

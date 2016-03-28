@@ -5,17 +5,17 @@ import _ "encoding/binary"
 
 type Sign bool
 
-type Word struct {
-	Bytes	[5]byte // 0 is MSB, 4 is LSB
-	Sign	Sign
-}
-
 func (s* Sign) String() string {
 	if *s {
 		return "+"
 	} else {
 		return "-"
 	}
+}
+
+type Word struct {
+	Bytes	[5]byte // 0 is MSB, 4 is LSB
+	Sign	Sign
 }
 
 func (w* Word) String() string {
@@ -26,6 +26,21 @@ func (w* Word) String() string {
 		w.Bytes[2],
 		w.Bytes[3],
 		w.Bytes[4])
+}
+
+func (w* Word) Field(mod byte) Word {
+	r := Word{Sign:true}
+	l := mod / 8
+	h := mod % 8
+	if l == 0 {
+		r.Sign = w.Sign
+		l++
+	}
+	o := 5 - h
+	for i := l - 1; i < h; i++ {
+		r.Bytes[i + o] = w.Bytes[i]
+	}
+	return r
 }
 
 type Index struct {
@@ -44,6 +59,45 @@ const (
 	Greater
 )
 
+func Adr(raw []byte) int16 {
+	r := int16(0)
+	l := len(raw)
+	for i, v := range raw {
+		a := int16(v) << byte((l - i - 1) * 6)
+		r += int16(a)
+	}
+	return r
+}
+
+func SignedAdr(s* Sign, raw []byte) int16 {
+	r := Adr(raw)
+	if !*s {
+		r = -r
+	}
+	return r
+}
+
+func (w *Word) SignedAdr() int16 {
+	return SignedAdr(&w.Sign, w.Bytes[0:2])
+}
+
+type Op byte
+
+const (
+	OP_LDA Op = 8
+	OP_LD1 Op = 9
+	OP_LD2 Op = 10
+	OP_LD3 Op = 11
+	OP_LD4 Op = 12
+	OP_LD5 Op = 13
+	OP_LD6 Op = 14
+	OP_LDX Op = 15
+)
+
+func (w *Word) Opcode() Op {
+	return Op(w.Bytes[4])
+}
+
 type Registers struct {
 	RA	Word
 	RX	Word
@@ -61,22 +115,4 @@ type Registers struct {
 type Mix struct {
 	Registers
 	Memory [4000]byte
-}
-
-func Adr(raw []byte) int16 {
-	r := int16(0)
-	l := len(raw)
-	for i, v := range raw {
-		a := int16(v) << byte((l - i - 1) * 6)
-		r += int16(a)
-	}
-	return r
-}
-
-func SignedAdr(s* Sign, raw []byte) int16 {
-	r := Adr(raw)
-	if !*s {
-		r = -r
-	}
-	return r
 }
