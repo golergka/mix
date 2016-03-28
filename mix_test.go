@@ -60,12 +60,23 @@ func TestWordOpcode(t *testing.T) {
 func TestDo(t *testing.T) {
 	{
 		var m Mix
-		m.RI[1] = Index{Sign:true,  Bytes:[2]byte{ 0, 63}}
+		m.RI[1] = Index{Sign:true, Bytes:[2]byte{0, 63}}
 		m.Memory[31] = Word {Sign:false, Bytes:[5]byte{10, 11, 0, 11, 22}}
 		m.Do(&Word {Sign:false, Bytes:[5]byte{0, 32, 02, 11, 8}})
 
 		assert.Equal(t,
 			Word {Sign:true, Bytes:[5]byte{00, 00, 10, 11, 00}},
 			m.RA)
+	}
+	{
+		var m Mix
+		m.RI[0] = Index{Sign:false, Bytes:[2]byte{0, 1}}
+		m.RI[2] = Index{Sign:true, Bytes:[2]byte{24, 12}}
+		m.Memory[12] = Word{Sign:false, Bytes:[5]byte{1, 2, 3, 4, 5}}
+		m.Do(&Word{Sign:true, Bytes:[5]byte{0, 13, 1, 27, 11}})
+
+		assert.Equal(t,
+			Index{Sign:true, Bytes:[2]byte{0, 3}},
+			m.RI[2])
 	}
 }

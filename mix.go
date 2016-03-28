@@ -103,6 +103,11 @@ func (m *Mix) EffectiveAdr(i *Word) int16 {
 	return m.RI[i.Bytes[2] - 1].SignedAdr() + i.SignedAdr()
 }
 
+func (i *Index) FromWord(w *Word) {
+	i.Sign = w.Sign
+	copy(i.Bytes[:], w.Bytes[3:5])
+}
+
 type Op byte
 
 const (
@@ -121,9 +126,15 @@ func (w *Word) Opcode() Op {
 }
 
 func (m *Mix) Do(i *Word) {
-	switch i.Opcode() {
+	switch  o := i.Opcode(); o {
 	case OP_LDA:
 		a := m.EffectiveAdr(i)
 		m.RA = m.Memory[a].Field(i.Bytes[3])
+	case OP_LD1, OP_LD2, OP_LD3, OP_LD4, OP_LD5, OP_LD6:
+		a := m.EffectiveAdr(i)
+		v := m.Memory[a].Field(i.Bytes[3])
+		m.RI[o - OP_LD1].FromWord(&v)
+		break
+
 	}
 }
