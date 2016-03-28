@@ -1,6 +1,7 @@
 package mix
 
 import "fmt"
+import _ "encoding/binary"
 
 type Sign bool
 
@@ -60,4 +61,14 @@ type Registers struct {
 type Mix struct {
 	Registers
 	Memory [4000]byte
+}
+
+func Adr(raw []byte) uint16 {
+	r := uint16(0)
+	l := len(raw)
+	for i, v := range raw {
+		a := uint16(v) << byte((l - i - 1) * 6)
+		r += uint16(a)
+	}
+	return r
 }
