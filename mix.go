@@ -111,14 +111,23 @@ func (i *Index) FromWord(w *Word) {
 type Op byte
 
 const (
-	OP_LDA Op = 8
-	OP_LD1 Op = 9
-	OP_LD2 Op = 10
-	OP_LD3 Op = 11
-	OP_LD4 Op = 12
-	OP_LD5 Op = 13
-	OP_LD6 Op = 14
-	OP_LDX Op = 15
+	OP_LDA	Op = 8
+	OP_LD1 	Op = 9
+	OP_LD2 	Op = 10
+	OP_LD3 	Op = 11
+	OP_LD4 	Op = 12
+	OP_LD5 	Op = 13
+	OP_LD6 	Op = 14
+	OP_LDX 	Op = 15
+
+	OP_LDAN Op = 16
+	OP_LD1N	Op = 17
+	OP_LD2N	Op = 18
+	OP_LD3N	Op = 19
+	OP_LD4N	Op = 20
+	OP_LD5N	Op = 21
+	OP_LD6N	Op = 22
+	OP_LDXN Op = 23
 )
 
 func (w *Word) Opcode() Op {
@@ -129,12 +138,34 @@ func (m *Mix) Do(i *Word) {
 	switch  o := i.Opcode(); o {
 	case OP_LDA:
 		a := m.EffectiveAdr(i)
-		m.RA = m.Memory[a].Field(i.Bytes[3])
+		v := m.Memory[a].Field(i.Bytes[3])
+		m.RA = v
+	case OP_LDX:
+		a := m.EffectiveAdr(i)
+		v := m.Memory[a].Field(i.Bytes[3])
+		m.RX = v
+		break
 	case OP_LD1, OP_LD2, OP_LD3, OP_LD4, OP_LD5, OP_LD6:
 		a := m.EffectiveAdr(i)
 		v := m.Memory[a].Field(i.Bytes[3])
 		m.RI[o - OP_LD1].FromWord(&v)
 		break
-
+	case OP_LDAN:
+		a := m.EffectiveAdr(i)
+		v := m.Memory[a].Field(i.Bytes[3])
+		v.Sign = !v.Sign
+		m.RA = v
+	case OP_LDXN:
+		a := m.EffectiveAdr(i)
+		v := m.Memory[a].Field(i.Bytes[3])
+		v.Sign = !v.Sign
+		m.RX = v
+		break
+	case OP_LD1N, OP_LD2N, OP_LD3N, OP_LD4N, OP_LD5N, OP_LD6N:
+		a := m.EffectiveAdr(i)
+		v := m.Memory[a].Field(i.Bytes[3])
+		v.Sign = !v.Sign
+		m.RI[o - OP_LD1].FromWord(&v)
+		break
 	}
 }
