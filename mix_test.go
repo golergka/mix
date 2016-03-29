@@ -19,7 +19,7 @@ func TestWordString(t *testing.T) {
 func TestWordField(t * testing.T) {
 	assert.Equal( t, 
 		  Word{Sign:true,  Bytes:[5]byte{ 0,  0, 10, 11,  0}},
-		(&Word{Sign:false, Bytes:[5]byte{10, 11,  0, 11, 22}}).Field(11))
+		(&Word{Sign:false, Bytes:[5]byte{10, 11,  0, 11, 22}}).GetField(11))
 }
 
 func TestAdr(t *testing.T) {
