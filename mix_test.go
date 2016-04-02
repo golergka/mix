@@ -184,9 +184,12 @@ func TestDo(t *testing.T) {
 		originalRA := Word{Sign: true, Bytes: [5]byte{1, 2, 3, 4, 5}}
 		m.RA = originalRA
 		m.Memory[1200] = Word{Sign: false, Bytes: [5]byte{20, 21, 22, 23, 24}}
+		i := "STA 1200(2:3)"
+		var w Word
+		fmt.Sscanln(i, &w)
 
 		// STA 1200(2:3)
-		m.Do(&Word{Sign: true, Bytes: [5]byte{18, 48, 0, 19, 24}})
+		m.Do(&w)
 
 		assert.Equal(t,
 			Word{Sign: false, Bytes: [5]byte{20, 4, 5, 23, 24}},
