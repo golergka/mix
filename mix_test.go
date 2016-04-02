@@ -70,6 +70,15 @@ func TestWordScan(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, Word{Sign:true, Bytes:[5]byte{1, 2, 3, 4, 5}}, m)
 	}
+	{
+		s := "LD2 -32,2(1:3)"
+		var m Word
+
+		_, err := fmt.Sscanf(s, "%i", &m)
+		
+		assert.Nil(t, err)
+		assert.Equal(t, Word{Sign:false, Bytes:[5]byte{0,32,2,11,10}}, m)
+	}
 }
 
 func TestOpScan(t *testing.T) {

@@ -64,6 +64,36 @@ func scanSign(state fmt.ScanState) (Sign, error) {
 	}
 }
 
+func scanIndex(state fmt.ScanState) (byte, error) {
+	b := byte(0) // Default value
+	r, _, err := state.ReadRune()
+	if err != nil {
+		state.UnreadRune()
+		return b, err
+	} 
+	if r != ',' {
+		state.UnreadRune()
+	} else if _, err := fmt.Fscanf(state, "%v", &b); err != nil {
+		return b, err
+	}
+	return b, nil
+}
+
+func scanMod(state fmt.ScanState) (l byte, h byte, e error) {
+	l, h = 0, 0 // Default value
+	r, _, err := state.ReadRune()
+	if err != nil {
+		state.UnreadRune()
+		return l, h, err
+	}
+	if r != '(' {
+		state.UnreadRune()
+	} else if _, err := fmt.Fscanf(state, "%v:%v)", &l, &h); err != nil {
+		return l, h, err
+	}
+	return l, h, nil
+}
+
 func (w* Word) Scan(state fmt.ScanState, verb rune) error {
 	switch verb {
 	case 'i': // OP ADDRESS,INDEX(MOD)
@@ -76,6 +106,16 @@ func (w* Word) Scan(state fmt.ScanState, verb rune) error {
 			}
 			w.SetOp(o)
 			w.SetAdr(a)
+			if i, err := scanIndex(state); err != nil {
+				return err
+			} else {
+				w.SetIndex(i)
+			}
+			if l, h, err := scanMod(state); err != nil {
+				return err
+			} else {
+				w.SetMod(PackMod(l, h))
+			}
 		}
 		// Scan index (can be omitted)
 		// Scan mod (can be omitted)
@@ -109,8 +149,16 @@ func (w Word) GetMod() byte {
 	return w.Bytes[3]
 }
 
+func (w *Word) SetMod(m byte) {
+	w.Bytes[3] = m
+}
+
 func UnpackMod(mod byte) (byte, byte) {
 	return (mod / 8), (mod % 8)
+}
+
+func PackMod(l byte, h byte) byte {
+	return l * 8 + h
 }
 
 func (w* Word) SetField(mod byte, v Word) {
@@ -209,18 +257,23 @@ func (w Word) GetIndex() byte {
 	return w.Bytes[2]
 }
 
-func (m *Mix) EffectiveAdr(i *Word) Adr {
+func (w *Word) SetIndex(i byte) {
+	w.Bytes[2] = i
+}
+
+func (m *Mix) EffectiveAdr(w *Word) Adr {
 	var indexDelta SignAdr
-	if i.Bytes[2] > 0 {
-		indexDelta = m.RI[i.Bytes[2] - 1].GetAdr()
+	i := w.GetIndex()
+	if i > 0 {
+		indexDelta = m.RI[i - 1].GetAdr()
 	}
-	r := indexDelta + i.GetAdr()
+	r := indexDelta + w.GetAdr()
 	return Adr(r)
 }
 
 func (m *Mix) GetMem(i *Word) Word {
 	a := m.EffectiveAdr(i)
-	return m.Memory[a].GetField(i.Bytes[3])
+	return m.Memory[a].GetField(i.GetMod())
 }
 
 func (i *Index) FromWord(w *Word) {
