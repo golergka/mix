@@ -5,7 +5,7 @@ import "errors"
 
 type Sign bool
 
-func (s* Sign) String() string {
+func (s *Sign) String() string {
 	if *s {
 		return "+"
 	} else {
@@ -14,14 +14,14 @@ func (s* Sign) String() string {
 }
 
 type Word struct {
-	Bytes	[5]byte // 0 is MSB, 4 is LSB
-	Sign	Sign
+	Bytes [5]byte // 0 is MSB, 4 is LSB
+	Sign  Sign
 }
 
 func (w Word) String() string {
-	return fmt.Sprintf("%v %02d %02d %02d %02d %02d", 
-		w.Sign.String(), 
-		w.Bytes[0], 
+	return fmt.Sprintf("%v %02d %02d %02d %02d %02d",
+		w.Sign.String(),
+		w.Bytes[0],
 		w.Bytes[1],
 		w.Bytes[2],
 		w.Bytes[3],
@@ -39,7 +39,7 @@ func (w Word) Format(f fmt.State, c rune) {
 			fmt.Fprintf(f, ",%v", i)
 		}
 		if l, h := UnpackMod(w.GetMod()); (l != 0) || (h != 0) {
-			fmt.Fprintf(f, "(%v:%v)", l,h)
+			fmt.Fprintf(f, "(%v:%v)", l, h)
 		}
 		break
 	default:
@@ -70,7 +70,7 @@ func scanIndex(state fmt.ScanState) (byte, error) {
 	if err != nil {
 		state.UnreadRune()
 		return b, err
-	} 
+	}
 	if r != ',' {
 		state.UnreadRune()
 	} else if _, err := fmt.Fscanf(state, "%v", &b); err != nil {
@@ -94,7 +94,7 @@ func scanMod(state fmt.ScanState) (l byte, h byte, e error) {
 	return l, h, nil
 }
 
-func (w* Word) Scan(state fmt.ScanState, verb rune) error {
+func (w *Word) Scan(state fmt.ScanState, verb rune) error {
 	switch verb {
 	case 'i': // OP ADDRESS,INDEX(MOD)
 		// Scan OP & address
@@ -126,9 +126,9 @@ func (w* Word) Scan(state fmt.ScanState, verb rune) error {
 		if err != nil {
 			return err
 		}
-		if _, err := fmt.Fscanf(state, 
-			"%v %v %v %v %v", 
-			&w.Bytes[0], 
+		if _, err := fmt.Fscanf(state,
+			"%v %v %v %v %v",
+			&w.Bytes[0],
 			&w.Bytes[1],
 			&w.Bytes[2],
 			&w.Bytes[3],
@@ -140,7 +140,7 @@ func (w* Word) Scan(state fmt.ScanState, verb rune) error {
 }
 
 func (w Word) GetField(mod byte) Word {
-	r := Word{Sign:true}
+	r := Word{Sign: true}
 	r.SetField(mod, w)
 	return r
 }
@@ -158,31 +158,32 @@ func UnpackMod(mod byte) (byte, byte) {
 }
 
 func PackMod(l byte, h byte) byte {
-	return l * 8 + h
+	return l*8 + h
 }
 
-func (w* Word) SetField(mod byte, v Word) {
+func (w *Word) SetField(mod byte, v Word) {
 	l, h := UnpackMod(mod)
 	if l == 0 {
 		w.Sign = v.Sign
 		l++
 	}
 	o := 5 - h
-	for i := l - 1; i < h; i ++ {
-		w.Bytes[i + o] = v.Bytes[i]
+	for i := l - 1; i < h; i++ {
+		w.Bytes[i+o] = v.Bytes[i]
 	}
 }
 
 type Index struct {
-	Bytes	[2]byte
-	Sign	Sign
+	Bytes [2]byte
+	Sign  Sign
 }
 
 type Jump struct {
-	Bytes	[2]byte
+	Bytes [2]byte
 }
 
 type Comparison int
+
 const (
 	Less Comparison = iota
 	Equal
@@ -196,13 +197,13 @@ func MakeAdr(raw []byte) Adr {
 	r := Adr(0)
 	l := len(raw)
 	for i, v := range raw {
-		a := int16(v) << byte((l - i - 1) * 6)
+		a := int16(v) << byte((l-i-1)*6)
 		r += Adr(a)
 	}
 	return r
 }
 
-func MakeSignAdr(s* Sign, raw []byte) SignAdr {
+func MakeSignAdr(s *Sign, raw []byte) SignAdr {
 	r := SignAdr(MakeAdr(raw))
 	if !*s {
 		r = -r
@@ -240,12 +241,12 @@ func (i *Index) GetAdr() SignAdr {
 }
 
 type Registers struct {
-	RA	Word
-	RX	Word
-	RI	[6]Index
+	RA Word
+	RX Word
+	RI [6]Index
 
-	O	bool
-	C	Comparison
+	O bool
+	C Comparison
 }
 
 type Mix struct {
@@ -265,7 +266,7 @@ func (m *Mix) EffectiveAdr(w *Word) Adr {
 	var indexDelta SignAdr
 	i := w.GetIndex()
 	if i > 0 {
-		indexDelta = m.RI[i - 1].GetAdr()
+		indexDelta = m.RI[i-1].GetAdr()
 	}
 	r := indexDelta + w.GetAdr()
 	return Adr(r)
@@ -282,7 +283,7 @@ func (i *Index) FromWord(w *Word) {
 }
 
 func (i *Index) ToWord() Word {
-	r := Word{Sign:i.Sign}
+	r := Word{Sign: i.Sign}
 	copy(r.Bytes[3:5], i.Bytes[:])
 	return r
 }
@@ -291,32 +292,32 @@ type Op byte
 
 //go:generate stringer -type=Op
 const (
-	LDA		Op = 8
-	LD1 	Op = 9
-	LD2 	Op = 10
-	LD3 	Op = 11
-	LD4 	Op = 12
-	LD5 	Op = 13
-	LD6 	Op = 14
-	LDX 	Op = 15
+	LDA Op = 8
+	LD1 Op = 9
+	LD2 Op = 10
+	LD3 Op = 11
+	LD4 Op = 12
+	LD5 Op = 13
+	LD6 Op = 14
+	LDX Op = 15
 
-	LDAN	Op = 16
-	LD1N	Op = 17
-	LD2N	Op = 18
-	LD3N	Op = 19
-	LD4N	Op = 20
-	LD5N	Op = 21
-	LD6N	Op = 22
-	LDXN	Op = 23
+	LDAN Op = 16
+	LD1N Op = 17
+	LD2N Op = 18
+	LD3N Op = 19
+	LD4N Op = 20
+	LD5N Op = 21
+	LD6N Op = 22
+	LDXN Op = 23
 
-	STA		Op = 24
-	ST1 	Op = 25
-	ST2 	Op = 26
-	ST3 	Op = 27
-	ST4 	Op = 28
-	ST5 	Op = 29
-	ST6 	Op = 30
-	STX 	Op = 31
+	STA Op = 24
+	ST1 Op = 25
+	ST2 Op = 26
+	ST3 Op = 27
+	ST4 Op = 28
+	ST5 Op = 29
+	ST6 Op = 30
+	STX Op = 31
 )
 
 func (b *Op) Scan(state fmt.ScanState, verb rune) error {
@@ -326,32 +327,80 @@ func (b *Op) Scan(state fmt.ScanState, verb rune) error {
 	}
 	s := string(t)
 	switch s {
-	case "LDA": *b = LDA; return nil
-	case "LD1": *b = LD1; return nil
-	case "LD2": *b = LD2; return nil
-	case "LD3": *b = LD3; return nil
-	case "LD4": *b = LD4; return nil
-	case "LD5": *b = LD5; return nil
-	case "LD6": *b = LD6; return nil
-	case "LDX": *b = LDX; return nil
+	case "LDA":
+		*b = LDA
+		return nil
+	case "LD1":
+		*b = LD1
+		return nil
+	case "LD2":
+		*b = LD2
+		return nil
+	case "LD3":
+		*b = LD3
+		return nil
+	case "LD4":
+		*b = LD4
+		return nil
+	case "LD5":
+		*b = LD5
+		return nil
+	case "LD6":
+		*b = LD6
+		return nil
+	case "LDX":
+		*b = LDX
+		return nil
 
-	case "LDAN": *b = LDAN; return nil
-	case "LD1N": *b = LD1N; return nil
-	case "LD2N": *b = LD2N; return nil
-	case "LD3N": *b = LD3N; return nil
-	case "LD4N": *b = LD4N; return nil
-	case "LD5N": *b = LD5N; return nil
-	case "LD6N": *b = LD6N; return nil
-	case "LDXN": *b = LDXN; return nil
+	case "LDAN":
+		*b = LDAN
+		return nil
+	case "LD1N":
+		*b = LD1N
+		return nil
+	case "LD2N":
+		*b = LD2N
+		return nil
+	case "LD3N":
+		*b = LD3N
+		return nil
+	case "LD4N":
+		*b = LD4N
+		return nil
+	case "LD5N":
+		*b = LD5N
+		return nil
+	case "LD6N":
+		*b = LD6N
+		return nil
+	case "LDXN":
+		*b = LDXN
+		return nil
 
-	case "STA": *b = STA; return nil
-	case "ST1": *b = ST1; return nil
-	case "ST2": *b = ST2; return nil
-	case "ST3": *b = ST3; return nil
-	case "ST4": *b = ST4; return nil
-	case "ST5": *b = ST5; return nil
-	case "ST6": *b = ST6; return nil
-	case "STX": *b = STX; return nil
+	case "STA":
+		*b = STA
+		return nil
+	case "ST1":
+		*b = ST1
+		return nil
+	case "ST2":
+		*b = ST2
+		return nil
+	case "ST3":
+		*b = ST3
+		return nil
+	case "ST4":
+		*b = ST4
+		return nil
+	case "ST5":
+		*b = ST5
+		return nil
+	case "ST6":
+		*b = ST6
+		return nil
+	case "STX":
+		*b = STX
+		return nil
 
 	default:
 		return errors.New("unknown instructtion token: " + s)
@@ -367,7 +416,7 @@ func (w *Word) SetOp(o Op) {
 }
 
 func (m *Mix) Do(i *Word) {
-	switch  o := i.GetOp(); o {
+	switch o := i.GetOp(); o {
 	case LDA:
 		v := m.GetMem(i)
 		m.RA = v
@@ -377,7 +426,7 @@ func (m *Mix) Do(i *Word) {
 		break
 	case LD1, LD2, LD3, LD4, LD5, LD6:
 		v := m.GetMem(i)
-		m.RI[o - LD1].FromWord(&v)
+		m.RI[o-LD1].FromWord(&v)
 		break
 	case LDAN:
 		v := m.GetMem(i)
@@ -391,7 +440,7 @@ func (m *Mix) Do(i *Word) {
 	case LD1N, LD2N, LD3N, LD4N, LD5N, LD6N:
 		v := m.GetMem(i)
 		v.Sign = !v.Sign
-		m.RI[o - LD1N].FromWord(&v)
+		m.RI[o-LD1N].FromWord(&v)
 		break
 	case STA:
 		a := m.EffectiveAdr(i)
@@ -399,7 +448,7 @@ func (m *Mix) Do(i *Word) {
 		break
 	case ST1, ST2, ST3, ST4, ST5, ST6:
 		a := m.EffectiveAdr(i)
-		w := m.RI[o - ST1].ToWord()
+		w := m.RI[o-ST1].ToWord()
 		m.Memory[a].SetField(i.GetMod(), w)
 		break
 	case STX:
