@@ -71,6 +71,15 @@ func TestWordScan(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, Word{Sign: false, Bytes: [5]byte{0, 32, 2, 11, 10}}, m)
 	}
+	{
+		s := "STA 1200(2:3)"
+		var m Word
+
+		_, err := fmt.Scanf(s, "%i", &m)
+
+		assert.Nil(t, err)
+		assert.Equal(t, Word{Sign:true, Bytes:[5]byte{18, 48, 0, 19, 24}}, m)
+	}
 }
 
 func TestWordField(t *testing.T) {
